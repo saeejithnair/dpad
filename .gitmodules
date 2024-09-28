@@ -1,0 +1,3 @@
+[submodule "third-party/satellite-imagery-downloader"]
+	path = third-party/satellite-imagery-downloader
+	url = https://github.com/andolg/satellite-imagery-downloader.git

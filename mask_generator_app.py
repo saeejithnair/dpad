@@ -36,11 +36,12 @@ def process_and_save(image_path, editor_output, original_size):
     if image_path is None or editor_output is None:
         return "No image or mask to process.", None, None
     
-    # Open the original image
+    # Open the original image and crop it to square
     original_image = Image.open(image_path).convert('RGBA')
+    original_image = crop_to_square(original_image)
     
     # Generate the mask
-    mask_image = generate_mask(editor_output, original_size)
+    mask_image = generate_mask(editor_output, original_image.size)
     
     if mask_image is None:
         return "Failed to generate mask.", None, None
@@ -55,14 +56,23 @@ def process_and_save(image_path, editor_output, original_size):
     # Generate output paths
     base_name = os.path.basename(image_path)
     name, ext = os.path.splitext(base_name)
-    mask_path = os.path.join("outputs", f"{name}_mask{ext}")
-    processed_path = os.path.join("outputs", f"{name}_processed{ext}")
+    mask_path = os.path.join("outputs", f"{name}-mask.png")
+    processed_path = os.path.join("outputs", f"{name}-processed.png")
     
     # Save the mask and processed image
     mask_image.save(mask_path)
     processed_image.save(processed_path)
     
     return f"Mask saved as {mask_path}\nProcessed image saved as {processed_path}", mask_image, processed_image
+
+def crop_to_square(image):
+    width, height = image.size
+    size = min(width, height)
+    left = (width - size) // 2
+    top = (height - size) // 2
+    right = left + size
+    bottom = top + size
+    return image.crop((left, top, right, bottom))
 
 with gr.Blocks() as app:
     gr.Markdown("# Image Mask Generator")
@@ -75,7 +85,7 @@ with gr.Blocks() as app:
         with gr.Column(scale=2):
             editor = gr.ImageEditor(
                 label="Draw Mask",
-                brush=gr.Brush(colors=["#ffffff"]),
+                brush=gr.Brush(colors=["#ffffff"], default_size=70),  # Set size to 100 (maximum)
                 type="numpy"
             )
     

@@ -66,7 +66,19 @@ def remove_background(input_image):
     response = requests.post(url, files=files, headers=headers)
 
     if response.status_code == 200:
-        return Image.open(BytesIO(response.content))
+        # Open the image from the response content
+        webp_image = Image.open(BytesIO(response.content))
+        
+        # Convert to RGB mode (removing alpha channel if present)
+        rgb_image = webp_image.convert("RGB")
+        
+        # Save as PNG to a BytesIO object
+        png_byte_arr = BytesIO()
+        rgb_image.save(png_byte_arr, format='PNG')
+        png_byte_arr.seek(0)
+        
+        # Return the PNG image
+        return Image.open(png_byte_arr)
     else:
         print(f"Error: {response.status_code} - {response.text}")
         return None
